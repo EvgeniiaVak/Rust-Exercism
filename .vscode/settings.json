@@ -1,0 +1,6 @@
+{
+    "terminal.integrated.env.osx": {
+        "PATH": "${workspaceFolder}/bin:${env:PATH}"
+    },
+    "editor.formatOnSave": true
+}
