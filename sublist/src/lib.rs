@@ -1,5 +1,6 @@
 use std::marker::Sync;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -15,33 +16,39 @@ fn is_superlist<T: PartialEq>(a: &[T], b: &[T]) -> bool {
 }
 
 fn is_superlist_threads<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
-    let (tx, rx) = mpsc::channel();
+    //! Strateforwardly send each window comparison to a new thread (no pooling).
 
-    let windows = a.windows(b.len()).collect::<Vec<&[T]>>();
+    let a = Arc::new(a);
+    let b = Arc::new(b);
 
-    for window in windows {
-        // create a new transmitter for each thread
-        let tx = tx.clone();
+    // scoped threads as in https://stackoverflow.com/a/32751956/9076659
+    thread::scope(|_| {
+        let (tx, rx) = mpsc::channel();
 
-        // TODO: is this clone necessary?
-        let window = window.clone();
-        let b = b.clone();
+        for window in a.windows(b.len()) {
+            // create a new transmitter for each thread
+            let tx = tx.clone();
 
-        // FIXME: error[E0521]: borrowed data escapes outside of function
-        thread::spawn(move || {
-            let are_equal = window == b;
-            tx.send(are_equal).unwrap();
-        });
-    }
+            let b = *b.clone();
+            let window = window.clone();
 
-    for received in rx {
-        if received {
-            // TODO: kill all other threads?
-            return true;
+            // FIXME: error[E0521]: borrowed data escapes outside of function
+            // maybe relevant https://users.rust-lang.org/t/why-does-thread-spawn-need-static-lifetime-for-generic-bounds/4541
+            thread::spawn(move || {
+                let are_equal = window == b;
+                tx.send(are_equal);
+            });
         }
-    }
 
-    false
+        for received in rx {
+            if received {
+                // TODO: kill all other threads?
+                return true;
+            }
+        }
+
+        false
+    }) // no semicolon to return result
 }
 
 pub fn sublist<T: PartialEq>(a: &[T], b: &[T]) -> Comparison {
