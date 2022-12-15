@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use std::marker::Sync;
 use std::sync::mpsc;
 use std::sync::Arc;
@@ -13,6 +14,12 @@ pub enum Comparison {
 
 fn is_superlist<T: PartialEq>(a: &[T], b: &[T]) -> bool {
     a.windows(b.len()).any(|w| w == b)
+}
+
+fn is_superlist_rayon<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
+    //! Parallelize the window comparisons using rayon.
+
+    a.par_windows(b.len()).any(|w| w == b)
 }
 
 fn is_superlist_threads<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
@@ -34,10 +41,10 @@ fn is_superlist_threads<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
 
             // FIXME: error[E0521]: borrowed data escapes outside of function
             // maybe relevant https://users.rust-lang.org/t/why-does-thread-spawn-need-static-lifetime-for-generic-bounds/4541
-            thread::spawn(move || {
-                let are_equal = window == b;
-                tx.send(are_equal);
-            });
+            // thread::spawn(move || {
+            //     let are_equal = window == b;
+            //     tx.send(are_equal);
+            // });
         }
 
         for received in rx {
@@ -51,7 +58,7 @@ fn is_superlist_threads<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
     }) // no semicolon to return result
 }
 
-pub fn sublist<T: PartialEq>(a: &[T], b: &[T]) -> Comparison {
+pub fn sublist<T: PartialEq + Sync>(a: &[T], b: &[T]) -> Comparison {
     if a == b {
         return Comparison::Equal;
     }
@@ -64,8 +71,8 @@ pub fn sublist<T: PartialEq>(a: &[T], b: &[T]) -> Comparison {
         return Comparison::Superlist;
     }
 
-    let superlist = is_superlist(a, b);
-    let sublist = is_superlist(b, a);
+    let superlist = is_superlist_rayon(a, b);
+    let sublist = is_superlist_rayon(b, a);
 
     match (sublist, superlist) {
         (true, true) => Comparison::Equal,
