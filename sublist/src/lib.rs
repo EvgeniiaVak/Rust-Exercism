@@ -33,22 +33,24 @@ fn is_superlist_threads<T: PartialEq + Sync + Send>(a: &[T], b: &[T]) -> bool {
     // scoped threads as in https://stackoverflow.com/a/32751956/9076659
     thread::scope(|s| {
         let (tx, rx) = mpsc::channel();
+        let mut thread_counter = 0;
 
         for window in a.windows(b.len()) {
+            thread_counter += 1;
             // create a new transmitter for each thread
             let tx = tx.clone();
 
             let b = b.clone();
 
             s.spawn(move || {
+                // TODO: kill the thread if we already found a match
                 let are_equal = *b == window;
                 tx.send(are_equal);
             });
         }
 
-        for received in rx {
-            if received {
-                // TODO: kill all other threads?
+        for _ in 0..thread_counter {
+            if rx.recv() == Ok(true) {
                 return true;
             }
         }
