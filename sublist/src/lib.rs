@@ -45,7 +45,7 @@ fn is_superlist_threads<T: PartialEq + Sync + Send>(a: &[T], b: &[T]) -> bool {
             s.spawn(move || {
                 // TODO: kill the thread if we already found a match
                 let are_equal = *b == window;
-                tx.send(are_equal);
+                tx.send(are_equal).unwrap();
             });
         }
 
@@ -64,11 +64,11 @@ pub fn sublist<T: PartialEq + Sync + Send>(a: &[T], b: &[T]) -> Comparison {
         return Comparison::Equal;
     }
 
-    if a.len() == 0 {
+    if a.is_empty() {
         return Comparison::Sublist;
     }
 
-    if b.len() == 0 {
+    if b.is_empty() {
         return Comparison::Superlist;
     }
 
