@@ -5,3 +5,10 @@ version = "0.0.0"
 
 [dependencies]
 rayon = "1.6.1"
+
+[dev-dependencies]
+criterion = { version = "0.3", features = ["html_reports"]}
+
+[[bench]]
+name = "is_superlist_rayon"
+harness = false

@@ -13,18 +13,18 @@ pub enum Comparison {
 }
 
 #[allow(dead_code)]
-fn is_superlist<T: PartialEq>(a: &[T], b: &[T]) -> bool {
+pub fn is_superlist<T: PartialEq>(a: &[T], b: &[T]) -> bool {
     a.windows(b.len()).any(|w| w == b)
 }
 
 #[allow(dead_code)]
-fn is_superlist_rayon<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
+pub fn is_superlist_rayon<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
     //! Parallelize the window comparisons using rayon.
 
     a.par_windows(b.len()).any(|w| w == b)
 }
 
-fn is_superlist_threads<T: PartialEq + Sync + Send>(a: &[T], b: &[T]) -> bool {
+pub fn is_superlist_threads<T: PartialEq + Sync + Send>(a: &[T], b: &[T]) -> bool {
     //! Strateforwardly send each window comparison to a new thread (no pooling).
 
     let a = Arc::new(a);
@@ -64,11 +64,11 @@ pub fn sublist<T: PartialEq + Sync + Send>(a: &[T], b: &[T]) -> Comparison {
         return Comparison::Equal;
     }
 
-    if a.len() == 0 {
+    if a.is_empty() {
         return Comparison::Sublist;
     }
 
-    if b.len() == 0 {
+    if b.is_empty() {
         return Comparison::Superlist;
     }
 
