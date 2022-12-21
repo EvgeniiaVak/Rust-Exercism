@@ -7,6 +7,8 @@ fn empty_equals_empty() {
     assert_eq!(Comparison::Equal, sublist(v, v));
 }
 
+// check that only 2 threads were spawned
+#[test]
 #[test]
 #[ignore]
 fn test_empty_is_a_sublist_of_anything() {
