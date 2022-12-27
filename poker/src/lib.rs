@@ -1,3 +1,5 @@
+use std::{cmp::Ordering, collections::BTreeMap};
+
 /// Given a list of poker hands, return a list of those hands which win.
 ///
 /// Note the type signature: this function should return _the same_ reference to
@@ -6,27 +8,19 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
     // assign a rank to each hand
     let mut hands: Vec<Hand> = hands.iter().map(|hand| Hand::new(hand)).collect();
 
-    // find the highest rank
-    hands.sort_by_key(|hand| (hand.hand_rank, hand.card_ranks));
-    let (highest_hand_rank, highest_card_ranks) = (
-        hands.last().unwrap().hand_rank,
-        hands.last().unwrap().card_ranks,
-    );
+    // find one winning hand
+    hands.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    let last_hand = hands.last().unwrap();
 
-    // both hands have two pairs
-    if highest_hand_rank == HandRank::TwoPair && hands[1].hand_rank == HandRank::TwoPair {
-        unimplemented!()
-        // highest ranked pair wins
-
-        // with the same highest ranked pair, tie goes to low pair
-    }
-
-    // return the hands with the highest rank
-    hands
-        .into_iter()
-        .filter(|hand| (hand.hand_rank, hand.card_ranks) == (highest_hand_rank, highest_card_ranks))
+    // look for more winning hands
+    let winning_hands = hands
+        .iter()
+        .rev()
+        .take_while(|hand| *hand == last_hand)
         .map(|hand| hand.cards)
-        .collect()
+        .collect::<Vec<&str>>();
+
+    winning_hands
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -47,12 +41,57 @@ enum CardRank {
     Ace,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+struct PairsKickerSplit {
+    pairs: [CardRank; 2],
+    kicker: CardRank,
+}
+
+impl PairsKickerSplit {
+    fn new(card_rank_counts: BTreeMap<CardRank, u8>) -> Self {
+        let pairs: [CardRank; 2] = card_rank_counts
+            .iter()
+            .filter(|(_, &count)| count == 2)
+            .map(|(&card_rank, _)| card_rank)
+            .collect::<Vec<CardRank>>()
+            .try_into()
+            .unwrap();
+
+        let kicker = card_rank_counts
+            .iter()
+            .find(|(_, &count)| count == 1)
+            .map(|(&card_rank, _)| card_rank)
+            .unwrap();
+
+        Self { pairs, kicker }
+    }
+}
+
+impl PartialOrd for PairsKickerSplit {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self.pairs == other.pairs {
+            return self.kicker.partial_cmp(&other.kicker);
+        }
+        if self.pairs[1] == other.pairs[1] {
+            return self.pairs[0].partial_cmp(&other.pairs[0]);
+        }
+
+        self.pairs[1].partial_cmp(&other.pairs[1])
+    }
+}
+
+impl Ord for PairsKickerSplit {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap_or(Ordering::Equal)
+    }
+}
+
 /// https://en.wikipedia.org/wiki/List_of_poker_hands
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum HandRank {
     HighCard,
     OnePair,
-    TwoPair,
+    TwoPair(PairsKickerSplit),
     ThreeOfAKind,
     Straight,
     Flush,
@@ -66,7 +105,7 @@ enum HandRank {
 struct Hand<'a> {
     cards: &'a str,
     hand_rank: HandRank,
-    card_ranks: (CardRank, CardRank, CardRank, CardRank, CardRank),
+    card_ranks: [CardRank; 5],
 }
 
 fn is_straight(card_ranks: &mut [CardRank]) -> bool {
@@ -87,7 +126,7 @@ fn is_straight(card_ranks: &mut [CardRank]) -> bool {
 
 impl<'a> Hand<'a> {
     fn new(cards: &'a str) -> Hand<'a> {
-        let mut card_ranks = cards
+        let mut card_ranks: [CardRank; 5] = cards
             .split_whitespace()
             .map(|card| match &card[0..1] {
                 "2" => CardRank::Two,
@@ -105,25 +144,24 @@ impl<'a> Hand<'a> {
                 "A" => CardRank::Ace,
                 _ => panic!("Invalid card rank"),
             })
-            .collect::<Vec<CardRank>>();
+            .collect::<Vec<CardRank>>()
+            .try_into()
+            .unwrap();
 
         card_ranks.sort();
 
-        let mut same_card_rank_counts = vec![1];
-        card_ranks.windows(2).for_each(|window| {
-            if window[0] == window[1] {
-                let count = same_card_rank_counts.last_mut().unwrap();
-                *count += 1;
-            } else {
-                same_card_rank_counts.push(1);
-            }
-        });
-        same_card_rank_counts.sort();
+        let mut card_rank_counts = BTreeMap::new();
+        for card_rank in card_ranks.iter() {
+            *card_rank_counts.entry(*card_rank).or_insert(0) += 1;
+        }
 
-        let mut hand_rank = match same_card_rank_counts.as_slice() {
+        let mut counts = card_rank_counts.values().collect::<Vec<&u8>>();
+        counts.sort();
+
+        let mut hand_rank = match counts.as_slice() {
             [1, 1, 1, 1, 1] => HandRank::HighCard,
             [1, 1, 1, 2] => HandRank::OnePair,
-            [1, 2, 2] => HandRank::TwoPair,
+            [1, 2, 2] => HandRank::TwoPair(PairsKickerSplit::new(card_rank_counts)),
             [1, 1, 3] => HandRank::ThreeOfAKind,
             [2, 3] => HandRank::FullHouse,
             [1, 4] => HandRank::FourOfAKind,
@@ -150,13 +188,23 @@ impl<'a> Hand<'a> {
         Hand {
             cards,
             hand_rank,
-            card_ranks: (
-                card_ranks[0],
-                card_ranks[1],
-                card_ranks[2],
-                card_ranks[3],
-                card_ranks[4],
-            ),
+            card_ranks,
         }
+    }
+}
+
+impl PartialEq for Hand<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.hand_rank == other.hand_rank && self.card_ranks == other.card_ranks
+    }
+}
+
+impl<'a> PartialOrd for Hand<'a> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self.hand_rank == other.hand_rank {
+            return Some(self.card_ranks.cmp(&other.card_ranks));
+        }
+
+        Some(self.hand_rank.cmp(&other.hand_rank))
     }
 }
