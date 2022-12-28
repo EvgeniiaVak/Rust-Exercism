@@ -15,6 +15,8 @@ pub enum Comparison {
 
 #[allow(dead_code)]
 pub fn is_superlist<T: PartialEq>(a: &[T], b: &[T]) -> bool {
+    //! Sequentially compare the windows of a to b.
+
     a.windows(b.len()).any(|w| w == b)
 }
 
@@ -25,8 +27,6 @@ pub fn is_superlist_rayon<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
     a.par_windows(b.len()).any(|w| w == b)
 }
 
-type Job = Box<dyn FnOnce() + Send>;
-
 pub fn is_superlist_threads<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
     //! Create threads and task queue to parallelize the window comparisons.
 
@@ -36,39 +36,40 @@ pub fn is_superlist_threads<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
         Err(_) => 4 as usize,
     };
 
-    // FIXME: lifetime may not live long enough
-    let tasks: Arc<Mutex<VecDeque<Job>>> = Arc::new(Mutex::new(VecDeque::new()));
+    let jobs = Arc::new(Mutex::new(VecDeque::new()));
     let found_match = Arc::new(AtomicBool::new(false));
 
     for window in a.windows(b.len()) {
         let b = b.clone();
         let found_match = Arc::clone(&found_match);
 
-        tasks.lock().unwrap().push_back(Box::new(move || {
+        jobs.lock().unwrap().push_back(move || {
             if *b == window {
                 found_match.store(true, Ordering::Relaxed);
             };
-        }));
-    }
-
-    for _ in 0..num_threads {
-        let tasks = Arc::clone(&tasks);
-        let found_match = Arc::clone(&found_match);
-
-        thread::spawn(move || loop {
-            let task = tasks.lock().unwrap().pop_front();
-
-            match task {
-                Some(task) => {
-                    task();
-                    if found_match.load(Ordering::Relaxed) {
-                        break;
-                    }
-                }
-                None => break,
-            }
         });
     }
+
+    thread::scope(|s| {
+        for _ in 0..num_threads {
+            let tasks = Arc::clone(&jobs);
+            let found_match = Arc::clone(&found_match);
+
+            s.spawn(move || loop {
+                let task = tasks.lock().unwrap().pop_front();
+
+                match task {
+                    Some(task) => {
+                        task();
+                        if found_match.load(Ordering::Relaxed) {
+                            break;
+                        }
+                    }
+                    None => break,
+                }
+            });
+        }
+    });
 
     found_match.load(Ordering::Relaxed)
 }
