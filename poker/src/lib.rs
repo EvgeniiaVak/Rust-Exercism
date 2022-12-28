@@ -1,26 +1,21 @@
-use std::{cmp::Ordering, collections::BTreeMap};
+use std::{cmp::Ordering, collections::BTreeMap, collections::BinaryHeap};
 
 /// Given a list of poker hands, return a list of those hands which win.
 ///
 /// Note the type signature: this function should return _the same_ reference to
 /// the winning hand(s) as were passed in, not reconstructed strings which happen to be equal.
 pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
-    // assign a rank to each hand
-    let mut hands: Vec<Hand> = hands.iter().map(|hand| Hand::new(hand)).collect();
+    let mut hands: BinaryHeap<Hand> = hands.iter().map(|hand| Hand::new(hand)).collect();
 
-    // find one winning hand
-    hands.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
-    let last_hand = hands.last().unwrap();
+    let mut winning = vec![hands.pop().unwrap()];
+    while let Some(hand) = hands.pop() {
+        if hand < winning[0] {
+            break;
+        }
+        winning.push(hand);
+    }
 
-    // look for more winning hands
-    let winning_hands = hands
-        .iter()
-        .rev()
-        .take_while(|hand| *hand == last_hand)
-        .map(|hand| hand.cards)
-        .collect::<Vec<&str>>();
-
-    winning_hands
+    winning.into_iter().map(|hand| hand.cards).collect()
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -101,7 +96,7 @@ enum HandRank {
     FiveOfAKind,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Ord)]
 struct Hand<'a> {
     cards: &'a str,
     hand_rank: HandRank,
@@ -208,3 +203,5 @@ impl<'a> PartialOrd for Hand<'a> {
         Some(self.hand_rank.cmp(&other.hand_rank))
     }
 }
+
+impl<'a> Eq for Hand<'a> {}
