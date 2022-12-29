@@ -10,5 +10,5 @@ rayon = "1.6.1"
 criterion = { version = "0.3", features = ["html_reports"]}
 
 [[bench]]
-name = "is_superlist_rayon"
+name = "sublist"
 harness = false
