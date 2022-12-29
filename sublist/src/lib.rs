@@ -71,7 +71,7 @@ fn is_superlist_threads<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
         Err(_) => 4 as usize,
     };
 
-    let tasks = Arc::new(Mutex::new(VecDeque::new()));
+    let mut tasks = VecDeque::new();
     let found_match = Arc::new(AtomicBool::new(false));
 
     // create the tasks and put them in one queue
@@ -79,12 +79,14 @@ fn is_superlist_threads<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
         let b = b.clone();
         let found_match = Arc::clone(&found_match);
 
-        tasks.lock().unwrap().push_back(move || {
+        tasks.push_back(move || {
             if *b == window {
                 found_match.store(true, Ordering::Relaxed);
             };
         });
     }
+
+    let tasks = Arc::new(Mutex::new(tasks));
 
     // spawn the threads and give them the tasks
     thread::scope(|s| {
