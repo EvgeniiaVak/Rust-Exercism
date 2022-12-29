@@ -5,8 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, available_parallelism};
 
-// https://exercism.org/tracks/rust/exercises/sublist
-pub fn sublist<T: PartialEq + Sync>(a: &[T], b: &[T]) -> Comparison {
+pub fn sublist<T: PartialEq + Sync>(a: &[T], b: &[T], method: Method) -> Comparison {
     if a == b {
         return Comparison::Equal;
     }
@@ -19,8 +18,14 @@ pub fn sublist<T: PartialEq + Sync>(a: &[T], b: &[T]) -> Comparison {
         return Comparison::Superlist;
     }
 
-    let superlist = is_superlist_threads(a, b);
-    let sublist = is_superlist_threads(b, a);
+    let f = match method {
+        Method::Sequential => is_superlist,
+        Method::Rayon => is_superlist_rayon,
+        Method::Threads => is_superlist_threads,
+    };
+
+    let superlist = f(a, b);
+    let sublist = f(b, a);
 
     match (sublist, superlist) {
         (true, true) => Comparison::Equal,
@@ -38,21 +43,26 @@ pub enum Comparison {
     Unequal,
 }
 
-#[allow(dead_code)]
-pub fn is_superlist<T: PartialEq>(a: &[T], b: &[T]) -> bool {
+#[derive(Debug, Copy, Clone)]
+pub enum Method {
+    Sequential,
+    Rayon,
+    Threads,
+}
+
+fn is_superlist<T: PartialEq>(a: &[T], b: &[T]) -> bool {
     //! Sequentially compare the windows of a to b.
 
     a.windows(b.len()).any(|w| w == b)
 }
 
-#[allow(dead_code)]
-pub fn is_superlist_rayon<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
+fn is_superlist_rayon<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
     //! Parallelize the window comparisons using rayon.
 
     a.par_windows(b.len()).any(|w| w == b)
 }
 
-pub fn is_superlist_threads<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
+fn is_superlist_threads<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
     //! Parallelize the window comparisons using std-only tools.
 
     let b = Arc::new(b);
