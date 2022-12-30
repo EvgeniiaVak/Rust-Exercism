@@ -2,6 +2,7 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Through
 use sublist::{sublist, Method};
 use std::fs;
 
+use pprof::criterion::{Output, PProfProfiler};
 
 static LARGE_STRING: &str = include_str!("large_input.txt");
 static SUBSTRING: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
@@ -39,7 +40,11 @@ fn bench_sublist(c: &mut Criterion) {
     }
 }
 
-criterion_group!(benches, bench_sublist);
+criterion_group!(
+    name = benches;
+    config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
+    targets = bench_sublist
+);
 criterion_main!(benches);
 
 
