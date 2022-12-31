@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Threads Flamegraphs</title>
+</head>
+
+<!--
+    In order to generate these flamegraphs, run the following:
+
+    cargo bench --bench sublist -- --profile-time=5
+-->
+
+<body>
+    <h2>Threads, 100</h2>
+    <img src="../target/criterion/Sublist/Threads, 100/100/profile/flamegraph.svg" />
+    <h2>Threads, 260135</h2>
+    <img src="../target/criterion/Sublist/Threads, 260135/260135/profile/flamegraph.svg" />
+    <h2>Threads, 520271</h2>
+    <img src="../target/criterion/Sublist/Threads, 520271/520271/profile/flamegraph.svg" />
+</body>
+
+</html>
