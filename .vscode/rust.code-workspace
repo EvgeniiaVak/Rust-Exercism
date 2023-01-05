@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "path": ".."
+    },
+    {
+      "path": "../sublist"
+    }
+  ],
+  "settings": {
+    "terminal.integrated.env.osx": {
+      "PATH": "${workspaceFolder}/bin:${env:PATH}"
+    },
+    "liveServer.settings.multiRootWorkspaceName": "rust"
+  }
+}
