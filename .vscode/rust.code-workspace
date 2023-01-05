@@ -5,6 +5,9 @@
     },
     {
       "path": "../sublist"
+    },
+    {
+      "path": "../health-statistics"
     }
   ],
   "settings": {
