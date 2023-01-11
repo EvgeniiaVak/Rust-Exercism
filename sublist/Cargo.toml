@@ -2,3 +2,14 @@
 edition = "2021"
 name = "sublist"
 version = "0.0.0"
+
+[dependencies]
+rayon = "1.6.1"
+
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"]}
+pprof = { version = "0.11.0", features = ["flamegraph", "criterion"] }
+
+[[bench]]
+name = "sublist"
+harness = false
