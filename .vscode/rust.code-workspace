@@ -8,6 +8,9 @@
     },
     {
       "path": "../health-statistics"
+    },
+    {
+      "path": "../simple-linked-list"
     }
   ],
   "settings": {
