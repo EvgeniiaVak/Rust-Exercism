@@ -44,7 +44,11 @@ fn bench_sublist(c: &mut Criterion) {
 
 criterion_group!(
     name = benches;
-    config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
+    // FIXME: this fails on macos
+    // command: cargo bench --bench sublist -- --profile-time=5
+    // error: process didn't exit successfully: ... (signal: 10, SIGBUS: access to undefined memory)
+    // sometimes it finishes, but the results look weird
+    config = Criterion::default().with_profiler(PProfProfiler::new(1, Output::Flamegraph(None)));
     targets = bench_sublist
 );
 criterion_main!(benches);
