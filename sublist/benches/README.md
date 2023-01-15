@@ -7,8 +7,3 @@ Stuff is mostly copied from Criterion's documentation, specifically these two pa
 
 The html reports can be found under `target/criterion/is_superlist/report/index.html`.
 
-## Flamegraphs
-
-```bash
-cargo bench --bench sublist -- --profile-time=5
-```

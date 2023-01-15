@@ -1,8 +1,7 @@
 use rayon::prelude::*;
-use std::collections::VecDeque;
 use std::marker::Sync;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::thread::{self, available_parallelism};
 
 pub fn sublist<T: PartialEq + Sync>(a: &[T], b: &[T], method: Method) -> Comparison {
@@ -65,46 +64,35 @@ fn is_superlist_rayon<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
 fn is_superlist_threads<T: PartialEq + Sync>(a: &[T], b: &[T]) -> bool {
     //! Parallelize the window comparisons using std-only tools.
 
-    let b = Arc::new(b);
     let num_threads = match available_parallelism() {
         Ok(n) => n.get(),
-        Err(_) => 4 as usize,
+        Err(_) => 4,
     };
 
-    let mut tasks = VecDeque::new();
     let found_match = Arc::new(AtomicBool::new(false));
+    let a_len = a.len();
+    let b_len = b.len();
 
-    // create the tasks and put them in one queue
-    for window in a.windows(b.len()) {
-        let b = b.clone();
-        let found_match = Arc::clone(&found_match);
-
-        tasks.push_back(move || {
-            if *b == window {
-                found_match.store(true, Ordering::Relaxed);
-            };
-        });
-    }
-
-    let tasks = Arc::new(Mutex::new(tasks));
-
-    // spawn the threads and give them the tasks
     thread::scope(|s| {
-        for _ in 0..num_threads {
-            let tasks = Arc::clone(&tasks);
+        for thread_i in 0..num_threads {
             let found_match = Arc::clone(&found_match);
 
-            s.spawn(move || loop {
-                let task = tasks.lock().unwrap().pop_front();
-
-                match task {
-                    Some(task) => {
-                        task();
-                        if found_match.load(Ordering::Relaxed) {
-                            break;
-                        }
+            s.spawn(move || {
+                let mut iteration = 0;
+                loop {
+                    let start = iteration * num_threads + thread_i;
+                    let end = start + b_len;
+                    if end > a_len {
+                        break;
                     }
-                    None => break,
+                    let window = &a[start..end];
+
+                    if b == window {
+                        found_match.store(true, Ordering::Relaxed);
+                        break;
+                    };
+
+                    iteration += 1;
                 }
             });
         }
