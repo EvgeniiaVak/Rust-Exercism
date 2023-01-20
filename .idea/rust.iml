@@ -5,7 +5,14 @@
       <sourceFolder url="file://$MODULE_DIR$/sublist/benches" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/sublist/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sublist/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/allergies/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/allergies/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/sublist/target" />
+      <excludeFolder url="file://$MODULE_DIR$/allergies/target" />
+      <excludeFolder url="file://$MODULE_DIR$/assembly-line/target" />
+      <excludeFolder url="file://$MODULE_DIR$/hello-world/target" />
+      <excludeFolder url="file://$MODULE_DIR$/lucians-luscious-lasagna/target" />
+      <excludeFolder url="file://$MODULE_DIR$/semi-structured-logs/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
