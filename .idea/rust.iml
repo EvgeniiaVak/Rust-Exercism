@@ -11,6 +11,8 @@
       <sourceFolder url="file://$MODULE_DIR$/tournament/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/robot-simulator/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/robot-simulator/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/rectangles/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rectangles/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/sublist/target" />
       <excludeFolder url="file://$MODULE_DIR$/allergies/target" />
       <excludeFolder url="file://$MODULE_DIR$/assembly-line/target" />
@@ -19,6 +21,7 @@
       <excludeFolder url="file://$MODULE_DIR$/semi-structured-logs/target" />
       <excludeFolder url="file://$MODULE_DIR$/tournament/target" />
       <excludeFolder url="file://$MODULE_DIR$/robot-simulator/target" />
+      <excludeFolder url="file://$MODULE_DIR$/rectangles/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
