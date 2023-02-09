@@ -1,11 +1,10 @@
-/// I have no idea how music works, so I'm just trying to get the tests to pass.
-
 #[derive(Debug)]
-pub struct Error;
+pub struct Error {
+    message: String,
+}
 
 pub struct Scale {
-    // TODO: try out with references, probably will need lifetime annotations
-    scale: Vec<String>,
+    notes: Vec<String>,
 }
 
 const SHARP: [&str; 12] = [
@@ -16,31 +15,64 @@ const FLAT: [&str; 12] = [
     "A", "Bb", "B", "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab",
 ];
 
+fn get_scale_type(tonic: &str) -> Result<&[&str], Error> {
+    match tonic {
+        _ if [
+            "C", "a", "G", "D", "A", "E", "B", "F#", "e", "b", "f#", "c#", "g#", "d#", "a#",
+        ]
+        .contains(&tonic) =>
+        {
+            Ok(&SHARP)
+        }
+
+        _ if [
+            "F", "Bb", "Eb", "Ab", "Db", "Gb", "d", "g", "c", "f", "bb", "eb",
+        ]
+        .contains(&tonic) =>
+        {
+            Ok(&FLAT)
+        }
+
+        _ => Err(Error {
+            message: "Invalid tonic".into(),
+        }),
+    }
+}
+
 impl Scale {
     pub fn new(tonic: &str, intervals: &str) -> Result<Scale, Error> {
-        unimplemented!()
+        let scale_type = get_scale_type(tonic)?;
+
+        let mut index = scale_type
+            .iter()
+            .position(|&x| x.to_uppercase() == tonic.to_uppercase())
+            .expect("Invalid tonic");
+        let mut notes: Vec<String> = vec![scale_type[index].into()];
+
+        for interval in intervals.chars() {
+            let shift_right = match interval {
+                'A' => 3,
+                'M' => 2,
+                'm' => 1,
+                _ => {
+                    return Err(Error {
+                        message: "Invalid interval".into(),
+                    })
+                }
+            };
+            index += shift_right;
+            let note = scale_type[index % scale_type.len()].into();
+            notes.push(note);
+        }
+
+        Ok(Scale { notes })
     }
 
     pub fn chromatic(tonic: &str) -> Result<Scale, Error> {
-        let i = SHARP.iter().position(|&x| x == tonic).unwrap();
-
-        let scale: Vec<String> = match tonic {
-            "C" => SHARP[i..]
-                .iter()
-                .chain(SHARP[..i + 1].iter())
-                .map(|&x| x.to_string())
-                .collect(),
-            _ => FLAT[i..]
-                .iter()
-                .chain(FLAT[..i + 1].iter())
-                .map(|&x| x.to_string())
-                .collect(),
-        };
-
-        Ok(Scale { scale })
+        Scale::new(tonic, "mmmmmmmmmmmm")
     }
 
     pub fn enumerate(&self) -> Vec<String> {
-        self.scale.clone()
+        self.notes.clone()
     }
 }
