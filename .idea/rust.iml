@@ -15,6 +15,8 @@
       <sourceFolder url="file://$MODULE_DIR$/rectangles/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/scale-generator/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/scale-generator/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/bowling/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bowling/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/clock/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/clock/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/sublist/target" />
@@ -28,6 +30,7 @@
       <excludeFolder url="file://$MODULE_DIR$/rectangles/target" />
       <excludeFolder url="file://$MODULE_DIR$/scale-generator/target" />
       <excludeFolder url="file://$MODULE_DIR$/clock/target" />
+      <excludeFolder url="file://$MODULE_DIR$/bowling/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
