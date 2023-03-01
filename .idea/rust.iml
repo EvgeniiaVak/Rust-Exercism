@@ -19,6 +19,8 @@
       <sourceFolder url="file://$MODULE_DIR$/bowling/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/clock/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/clock/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/dot-dsl/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/dot-dsl/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/sublist/target" />
       <excludeFolder url="file://$MODULE_DIR$/allergies/target" />
       <excludeFolder url="file://$MODULE_DIR$/assembly-line/target" />
@@ -31,6 +33,7 @@
       <excludeFolder url="file://$MODULE_DIR$/scale-generator/target" />
       <excludeFolder url="file://$MODULE_DIR$/clock/target" />
       <excludeFolder url="file://$MODULE_DIR$/bowling/target" />
+      <excludeFolder url="file://$MODULE_DIR$/dot-dsl/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
