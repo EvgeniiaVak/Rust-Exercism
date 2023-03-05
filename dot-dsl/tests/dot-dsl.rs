@@ -1,6 +1,7 @@
 use dot_dsl::graph::graph_items::edge::Edge;
 use dot_dsl::graph::graph_items::node::Node;
 use dot_dsl::graph::Graph;
+use dot_dsl::Attributable;
 use maplit::hashmap;
 
 #[test]

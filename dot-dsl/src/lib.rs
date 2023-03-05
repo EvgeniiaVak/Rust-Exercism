@@ -1,6 +1,19 @@
+pub trait Attributable: Clone {
+    fn attr(&self, key: &str) -> Option<&str>;
+    fn set_attr(&mut self, key: &str, value: &str);
+    fn with_attrs(&self, attrs: &[(&str, &str)]) -> Self {
+        let mut new = self.clone();
+        for (k, v) in attrs {
+            new.set_attr(k, v);
+        }
+        new
+    }
+}
+
 pub mod graph {
     use crate::graph::graph_items::edge::Edge;
     use crate::graph::graph_items::node::Node;
+    use crate::Attributable;
     use maplit::hashmap;
     use std::collections::HashMap;
 
@@ -34,18 +47,18 @@ pub mod graph {
             graph
         }
 
-        pub fn with_attrs(&self, attrs: &[(&str, &str)]) -> Self {
-            let attrs = attrs
-                .iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect();
-            let mut graph = self.clone();
-            graph.attrs = attrs;
-            graph
-        }
-
         pub fn node(&self, id: &str) -> Option<Node> {
             self.nodes.iter().find(|n| n.id == id).cloned()
+        }
+    }
+
+    impl Attributable for Graph {
+        fn attr(&self, key: &str) -> Option<&str> {
+            self.attrs.get(key).map(|s| s.as_str())
+        }
+
+        fn set_attr(&mut self, key: &str, value: &str) {
+            self.attrs.insert(key.into(), value.into());
         }
     }
 
@@ -57,6 +70,7 @@ pub mod graph {
 
     pub mod graph_items {
         pub mod edge {
+            use crate::Attributable;
             use maplit::hashmap;
             use std::collections::HashMap;
 
@@ -75,24 +89,21 @@ pub mod graph {
                         attrs: hashmap! {},
                     }
                 }
+            }
 
-                pub fn with_attrs(&self, attrs: &[(&str, &str)]) -> Self {
-                    let attrs = attrs
-                        .iter()
-                        .map(|(k, v)| (k.to_string(), v.to_string()))
-                        .collect();
-                    let mut edge = self.clone();
-                    edge.attrs = attrs;
-                    edge
+            impl Attributable for Edge {
+                fn attr(&self, key: &str) -> Option<&str> {
+                    self.attrs.get(key).map(|s| s.as_str())
                 }
 
-                pub fn attr(&self, key: &str) -> Option<&str> {
-                    self.attrs.get(key).map(|s| s.as_str())
+                fn set_attr(&mut self, key: &str, value: &str) {
+                    self.attrs.insert(key.into(), value.into());
                 }
             }
         }
 
         pub mod node {
+            use crate::Attributable;
             use maplit::hashmap;
             use std::collections::HashMap;
 
@@ -109,19 +120,15 @@ pub mod graph {
                         attrs: hashmap! {},
                     }
                 }
+            }
 
-                pub fn with_attrs(&self, attrs: &[(&str, &str)]) -> Self {
-                    let attrs = attrs
-                        .iter()
-                        .map(|(k, v)| (k.to_string(), v.to_string()))
-                        .collect();
-                    let mut node = self.clone();
-                    node.attrs = attrs;
-                    node
+            impl Attributable for Node {
+                fn attr(&self, key: &str) -> Option<&str> {
+                    self.attrs.get(key).map(|s| s.as_str())
                 }
 
-                pub fn attr(&self, key: &str) -> Option<&str> {
-                    self.attrs.get(key).map(|s| s.as_str())
+                fn set_attr(&mut self, key: &str, value: &str) {
+                    self.attrs.insert(key.into(), value.into());
                 }
             }
         }
